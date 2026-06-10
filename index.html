@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingoEspaol</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #a0a0a0;
+            margin-bottom: 30px;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 1000px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+        }
+
+        .panel h2 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #48dbfb;
+        }
+
+        /* Tabla de nmeros 1-90 */
+        .numbers-board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 6px;
+        }
+
+        .num-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .num-cell.called {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-color: #e74c3c;
+            animation: popIn 0.4s ease;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .num-cell.last-called {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            border-color: #f39c12;
+            transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.6);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); }
+            70% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        /* Panel lateral */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .current-number {
+            text-align: center;
+            padding: 25px 15px;
+        }
+
+        .number-display {
+            font-size: 4.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #feca57, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .number-letter {
+            font-size: 1.3rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #fd79a8);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #f1c40f);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(243, 156, 18, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .status.waiting {
+            background: rgba(253, 203, 110, 0.2);
+            color: #fdcb6e;
+        }
+
+        .status.playing {
+            background: rgba(0, 184, 148, 0.2);
+            color: #00b894;
+        }
+
+        .status.won {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            animation: celebrate 0.5s ease infinite alternate;
+        }
+
+        @keyframes celebrate {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        .called-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .called-tag {
+            padding: 4px 8px;
+            background: rgba(231, 76, 60, 0.3);
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #feca57;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 1001;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .btn-nav {
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-nav:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BINGO ESPAOL</h1>
+        <p class="subtitle">90 nmeros | Cartones 3x9 con 5 nmeros por fila</p>
+
+        <div class="game-area">
+            <!-- Tabla de nmeros -->
+            <div>
+                <div class="panel">
+                    <h2>Tabla de Nmeros (1-90)</h2>
+                    <div class="numbers-board" id="numbersBoard">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="status waiting" id="status">
+                    Presiona "Nuevo Juego" para comenzar
+                </div>
+
+                <div class="panel current-number">
+                    <div class="number-display" id="currentNumber">--</div>
+                    <div class="number-letter" id="currentLetter">-</div>
+                </div>
+
+                <div class="panel">
+                    <button class="btn btn-primary" id="newGameBtn" onclick="newGame()">
+                        Nuevo Juego
+                    </button>
+                    <button class="btn btn-success" id="callNumberBtn" onclick="callNumber()" disabled>
+                        Llamar Nmero
+                    </button>
+                    <button class="btn btn-warning" id="autoCallBtn" onclick="toggleAutoCall()" disabled>
+                        Auto Llamar
+                    </button>
+                    <button class="btn btn-danger" id="restartBtn" onclick="restartGame()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                        Reiniciar Partida
+                    </button>
+                    <a href="cartones.html" class="btn btn-nav" style="background: linear-gradient(135deg, #636e72, #2d3436); color: white;">
+                        Ver Cartones
+                    </a>
+                </div>
+
+                <div class="panel">
+                    <h2>Nmeros Llamados (<span id="calledCount">0</span>/90)</h2>
+                    <div class="called-list" id="calledList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado del juego
+        let calledNumbers = new Set();
+        let allNumbers = [];
+        let gameActive = false;
+        let currentNumber = null;
+        let autoCallInterval = null;
+        let isAutoCalling = false;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            generateNumberBoard();
+        });
+
+        // Generar tabla de nmeros 1-90
+        function generateNumberBoard() {
+            const board = document.getElementById('numbersBoard');
+            board.innerHTML = '';
+            for (let i = 1; i <= 90; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'num-cell';
+                cell.id = `num-${i}`;
+                cell.textContent = i;
+                board.appendChild(cell);
+            }
+        }
+
+        // Nuevo Juego
+        function newGame() {
+            // Detener auto call si est activo
+            if (isAutoCalling) {
+                toggleAutoCall();
+            }
+
+            // Reset estado
+            calledNumbers = new Set();
+            allNumbers = [];
+            gameActive = true;
+            currentNumber = null;
+
+            // Generar todos los nmeros
+            for (let i = 1; i <= 90; i++) {
+                allNumbers.push(i);
+            }
+            shuffleArray(allNumbers);
+
+            // Reset UI
+            generateNumberBoard();
+            document.getElementById('status').className = 'status playing';
+            document.getElementById('status').textContent = 'Juego en curso!';
+            document.getElementById('currentNumber').textContent = '--';
+            document.getElementById('currentLetter').textContent = '-';
+            document.getElementById('calledList').innerHTML = '';
+            document.getElementById('calledCount').textContent = '0';
+            document.getElementById('callNumberBtn').disabled = false;
+            document.getElementById('autoCallBtn').disabled = false;
+            document.getElementById('newGameBtn').disabled = true;
+        }
+
+        // Llamar nmero
+        function callNumber() {
+            if (allNumbers.length === 0) {
+                endGame();
+                return;
+            }
+
+            // Quitar el resaltado del anterior
+            if (currentNumber !== null) {
+                const prevCell = document.getElementById(`num-${currentNumber}`);
+                if (prevCell) {
+                    prevCell.classList.remove('last-called');
+                }
+            }
+
+            // Obtener siguiente nmero
+            currentNumber = allNumbers.pop();
+            calledNumbers.add(currentNumber);
+
+            // Actualizar display
+            document.getElementById('currentNumber').textContent = currentNumber;
+            document.getElementById('currentLetter').textContent = `Letra: ${getLetter(currentNumber)}`;
+
+            // Marcar en la tabla
+            const cell = document.getElementById(`num-${currentNumber}`);
+            if (cell) {
+                cell.classList.add('called');
+                cell.classList.add('last-called');
+            }
+
+            // Agregar a la lista
+            const list = document.getElementById('calledList');
+            const tag = document.createElement('span');
+            tag.className = 'called-tag';
+            tag.textContent = currentNumber;
+            list.insertBefore(tag, list.firstChild);
+
+            // Actualizar contador
+            document.getElementById('calledCount').textContent = calledNumbers.size;
+
+            // Animacin
+            document.getElementById('currentNumber').style.animation = 'none';
+            setTimeout(() => {
+                document.getElementById('currentNumber').style.animation = 'popIn 0.4s ease';
+            }, 10);
+        }
+
+        // Obtener letra del nmero (Bingo espaol usa filas)
+        function getLetter(num) {
+            if (num >= 1 && num <= 10) return '1ra Fila';
+            if (num >= 11 && num <= 20) return '2da Fila';
+            if (num >= 21 && num <= 30) return '3ra Fila';
+            if (num >= 31 && num <= 40) return '4ta Fila';
+            if (num >= 41 && num <= 50) return '5ta Fila';
+            if (num >= 51 && num <= 60) return '6ta Fila';
+            if (num >= 61 && num <= 70) return '7ma Fila';
+            if (num >= 71 && num <= 80) return '8va Fila';
+            return '9na Fila';
+        }
+
+        // Auto llamar nmeros
+        function toggleAutoCall() {
+            if (isAutoCalling) {
+                clearInterval(autoCallInterval);
+                autoCallInterval = null;
+                isAutoCalling = false;
+                document.getElementById('autoCallBtn').textContent = 'Auto Llamar';
+                document.getElementById('autoCallBtn').style.background = 'linear-gradient(135deg, #f39c12, #f1c40f)';
+            } else {
+                isAutoCalling = true;
+                document.getElementById('autoCallBtn').textContent = 'Detener Auto';
+                document.getElementById('autoCallBtn').style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+                autoCallInterval = setInterval(() => {
+                    if (allNumbers.length > 0 && gameActive) {
+                        callNumber();
+                    } else {
+                        toggleAutoCall();
+                        if (allNumbers.length === 0) endGame();
+                    }
+                }, 4000);
+            }
+        }
+
+        // Fin del juego
+        function endGame() {
+            gameActive = false;
+            if (isAutoCalling) toggleAutoCall();
+            document.getElementById('status').className = 'status waiting';
+            document.getElementById('status').textContent = 'Se acabaron los nmeros!';
+            document.getElementById('callNumberBtn').disabled = true;
+            document.getElementById('autoCallBtn').disabled = true;
+            document.getElementById('newGameBtn').disabled = false;
+        }
+
+        // Reiniciar partida
+        function restartGame() {
+            if (isAutoCalling) toggleAutoCall();
+            gameActive = false;
+            calledNumbers = new Set();
+            allNumbers = [];
+            currentNumber = null;
+
+            generateNumberBoard();
+            document.getElementById('status').className = 'status waiting';
+            document.getElementById('status').textContent = 'Presiona "Nuevo Juego" para comenzar';
+            document.getElementById('currentNumber').textContent = '--';
+            document.getElementById('currentLetter').textContent = '-';
+            document.getElementById('calledList').innerHTML = '';
+            document.getElementById('calledCount').textContent = '0';
+            document.getElementById('callNumberBtn').disabled = true;
+            document.getElementById('autoCallBtn').disabled = true;
+            document.getElementById('newGameBtn').disabled = false;
+        }
+
+        // Confeti
+        function createConfetti() {
+            const colors = ['#feca57', '#ff6b6b', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd', '#00b894'];
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 50);
+            }
+        }
+
+        // Barajar array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+    </script>
+</body>
+</html>
