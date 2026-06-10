@@ -67,7 +67,7 @@
             color: #48dbfb;
         }
 
-        /* Tabla de nmeros 1-90 */
+        /* Tabla de números 1-90 */
         .numbers-board {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
@@ -284,15 +284,103 @@
         .btn-nav:hover {
             transform: translateY(-2px);
         }
+
+        /* Modal Edad */
+        .age-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .age-modal.hidden {
+            display: none;
+        }
+
+        .age-modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 3px solid #e74c3c;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 450px;
+            margin: 20px;
+        }
+
+        .age-modal-content h2 {
+            font-size: 1.8rem;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .age-modal-content p {
+            color: #a0a0a0;
+            margin-bottom: 25px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .age-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .age-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .age-btn-yes {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            color: white;
+        }
+
+        .age-btn-yes:hover {
+            transform: scale(1.05);
+        }
+
+        .age-btn-no {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .age-btn-no:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
+    <!-- Aviso de Edad -->
+    <div class="age-modal" id="ageModal">
+        <div class="age-modal-content">
+            <h1 style="color: #feca57; margin-bottom: 20px;">BINGO</h1>
+            <h2>Verificacin de Edad</h2>
+            <p>Este juego está dirigido a mayores de 18 años.<br>¿Confirmas que tienes edad legal para jugar?</p>
+            <div class="age-modal-buttons">
+                <button class="age-btn age-btn-yes" onclick="confirmAge(true)">Si, tengo +18</button>
+                <button class="age-btn age-btn-no" onclick="confirmAge(false)">No, soy menor</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <h1>BINGO ESPAÑOL</h1>
         <p class="subtitle">90 números | Cartones 3x9 con 5 números por fila</p>
 
         <div class="game-area">
-            <!-- Tabla de nmeros -->
+                    <!-- Tabla de números -->
             <div>
                 <div class="panel">
                     <h2>Tabla de Números (1-90)</h2>
@@ -327,7 +415,7 @@
                         Reiniciar Partida
                     </button>
                     <a href="cartones.html" class="btn btn-nav" style="background: linear-gradient(135deg, #636e72, #2d3436); color: white;">
-                        Ver Cartones
+                        Imprimir Cartones
                     </a>
                 </div>
 
@@ -340,6 +428,24 @@
     </div>
 
     <script>
+        // Verificar edad al cargar
+        function confirmAge(isAdult) {
+            if (isAdult) {
+                document.getElementById('ageModal').classList.add('hidden');
+                localStorage.setItem('bingo_age_verified', 'true');
+            } else {
+                alert('Debes ser mayor de 18 años para jugar al bingo.');
+                window.location.href = 'https://www.google.com';
+            }
+        }
+
+        // Comprobar si ya verificó la edad
+        window.onload = function() {
+            if (localStorage.getItem('bingo_age_verified') === 'true') {
+                document.getElementById('ageModal').classList.add('hidden');
+            }
+        };
+
         // Estado del juego
         let calledNumbers = new Set();
         let allNumbers = [];
@@ -353,7 +459,7 @@
             generateNumberBoard();
         });
 
-        // Generar tabla de nmeros 1-90
+        // Generar tabla de números 1-90
         function generateNumberBoard() {
             const board = document.getElementById('numbersBoard');
             board.innerHTML = '';
@@ -379,7 +485,7 @@
             gameActive = true;
             currentNumber = null;
 
-            // Generar todos los nmeros
+            // Generar todos los números
             for (let i = 1; i <= 90; i++) {
                 allNumbers.push(i);
             }
@@ -398,7 +504,7 @@
             document.getElementById('newGameBtn').disabled = true;
         }
 
-        // Llamar nmero
+        // Llamar número
         function callNumber() {
             if (allNumbers.length === 0) {
                 endGame();
@@ -413,7 +519,7 @@
                 }
             }
 
-            // Obtener siguiente nmero
+            // Obtener siguiente número
             currentNumber = allNumbers.pop();
             calledNumbers.add(currentNumber);
 
@@ -445,7 +551,7 @@
             }, 10);
         }
 
-        // Obtener letra del nmero (Bingo espaol usa filas)
+        // Obtener letra del número (Bingo español usa filas)
         function getLetter(num) {
             if (num >= 1 && num <= 10) return '1ra Fila';
             if (num >= 11 && num <= 20) return '2da Fila';
@@ -458,7 +564,7 @@
             return '9na Fila';
         }
 
-        // Auto llamar nmeros
+        // Auto llamar números
         function toggleAutoCall() {
             if (isAutoCalling) {
                 clearInterval(autoCallInterval);
